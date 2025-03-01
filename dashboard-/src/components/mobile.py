@@ -4,14 +4,19 @@ from azure.cosmos import CosmosClient, PartitionKey, exceptions
 import uuid
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-HOST = "https://jobspringdatabase.documents.azure.com:443/"
-MASTER_KEY = "akxvdAbJv3FY33taQkaqXRRaAQB2S3WR22VQM60f0eWLBbXm6uPgtxVlN2ZBtci4pbvRTcBKSx1oACDbgFpzsw=="
-DATABASE_ID = "resume"
-CONTAINER_ID = "resume_outputs"
+HOST = os.getenv("COSMOS_DB_HOST")
+MASTER_KEY = os.getenv("COSMOS_DB_MASTER_KEY")
+DATABASE_ID = os.getenv("COSMOS_DB_DATABASE_ID")
+CONTAINER_ID = os.getenv("COSMOS_DB_CONTAINER_ID")
 
 app = FastAPI()
 
