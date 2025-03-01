@@ -1,0 +1,282 @@
+.sidebar {
+   flex-basis: 15.5%;
+   background-color: rgb(255, 255, 255);
+   height: 89.5vh; 
+   box-shadow: rgba(0, 0, 0, 0.3);
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+   padding: 0px 20px;
+   margin-top: 76px;
+   border-right: 2px solid #E5E5E5;
+}
+.sidebar-top {
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   align-items:flex-start;
+   justify-content:center;
+   padding: 30px 0px;
+}
+.logo-name  {
+   display: none;
+}
+.sidebar-top button {
+   width: 98%;
+   text-align: left;
+   padding: 12px 0px 12px 15px;
+   font-size: 17px;
+   border: none;
+   outline: none;
+   border-radius: 11px;
+   justify-content: flex-start;
+  
+   cursor: pointer;
+   transition: 0.3s;
+}
+
+.sidebar-top button a {
+   display: flex;
+   align-items:center;
+   justify-content:flex-start;
+   gap: 18px;
+   list-style: none;
+   text-decoration: none;
+   color:rgba(0, 20, 61, 60%) ;
+   font-size: 13.31px;
+   font-weight: 500;
+}
+.sidebar-top button:hover a {
+   color:#121746 ;
+}
+.sidebar-top button a img {
+   width: 16px;
+}
+
+.sidebar-bottom {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 8px;
+   padding: 40px 0px;
+}
+.sidebar-bottom button {
+   padding: 12px 20px;
+   border: none;
+   outline: none;
+   border-radius: 10px;
+   background-color: #121746;
+   color: #ffffff;
+   cursor: pointer;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 8px;
+   font-size: 14px;
+   color: #FFFFFF;
+   font-weight: 500;
+}
+.sidebar-bottom .dark-btn {
+   background-color:#FFFFFF ;
+   color: rgba(0, 0, 0, 40%);
+   font-weight: 500;
+}
+.sidebar-bottom button img {
+   width: 14px;
+}
+
+
+
+
+
+/* Sidebar.css */
+
+/* Default Button Style */
+button {
+   background-color: transparent;
+   border: none;
+   cursor: pointer;
+   padding: 10px;
+   font-size: 16px;
+   text-align: left;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   transition: background-color 0.3s ease, color 0.3s ease;
+ }
+ 
+ /* Active Button Style */
+ .sidebar-top button.active {
+   background-color: #121746;
+   color: white;
+   font-weight: 500;
+   transition: all 0.3s ease;
+ }
+ .sidebar-top button.active:hover a {
+   color: #ffffff;
+ }
+ button.active a {
+   color: white;  /* Ensure the text inside Link turns white when the button is active */
+   text-decoration: none; /* Optional: Remove underline from links if you want */
+ }
+ 
+ /* Optional: Add hover effect */
+ .sidebar-top button:hover {
+   background-color: #f0f0f0;
+ }
+ 
+ .sidebar-top button.active:hover {
+   background-color: #121746; /* Slightly darker green when hovering on active */
+ }
+ 
+ /* Style for images inside buttons */
+ .sidebar-top button img {
+   transition: filter 0.3s ease;
+ }
+ 
+ /* If active, change image to white */
+ .sidebar-top button.active img {
+   filter: brightness(0) invert(1); /* White color for the image */
+ }
+ 
+ 
+ .sidebar-top button img {
+   width: 16px; /* Adjust size as per requirement */
+   height: 16px;
+ }
+ 
+ 
+ @media (max-width:750px) {
+   .sidebar {
+      background-color: rgb(255, 255, 255);
+      height: 89.50vh; 
+      box-shadow: rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0px 20px;
+      margin-top: 76px;
+      border-right: 2px solid #E5E5E5;
+      margin-left: 0px;
+      position: absolute;
+      z-index: 1;
+      top: 0px;
+      left: 0;
+      transition: 0.5s ease-out;
+   }
+   .logo-name {
+      display: block;
+   }
+   .logo-name a {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap:5.55px ;
+
+   color: var(--brand-clr-500, #1B2ACB);
+font-family: "Young Serif";
+font-size: 21.254px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+text-transform: uppercase;
+margin-bottom: 34.9px;
+margin-top: 20.03px;
+   }
+   .logo-name a img {
+      width: 25.19px;
+      height: 28.871px;
+      
+   }
+   .sidebar-top {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      align-items:flex-start;
+      justify-content:center;
+      align-items: flex-start;
+      padding: 10px 0px;
+   }
+   .sidebar-top button a {
+      display: flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap: 13px;
+      list-style: none;
+      text-decoration: none;
+      color:rgba(0, 20, 61, 60%) ;
+      font-size: 13.31px;
+      font-weight: 500;
+   }
+   .sidebar-top button:hover a {
+      color:#121746 ;
+   }
+   .sidebar-top button a img {
+      width: 16px;
+   }
+   .sidebar-top button a img {
+      width: 13px;
+   }
+   .sidebar-bottom {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 16px;
+      margin-bottom: 61px;
+   }
+
+
+   button {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      font-size: 16px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Active Button Style */
+    .sidebar-top button.active {
+      background-color: #121746;
+      color: white;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .sidebar-top button.active:hover a {
+      color: #ffffff;
+    }
+    button.active a {
+      color: white;  /* Ensure the text inside Link turns white when the button is active */
+      text-decoration: none; /* Optional: Remove underline from links if you want */
+    }
+    
+    /* Optional: Add hover effect */
+    .sidebar-top button:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .sidebar-top button.active:hover {
+      background-color: #121746; /* Slightly darker green when hovering on active */
+    }
+    
+    /* Style for images inside buttons */
+    .sidebar-top button img {
+      transition: filter 0.3s ease;
+    }
+    
+    /* If active, change image to white */
+    .sidebar-top button.active img {
+      filter: brightness(0) invert(1); /* White color for the image */
+    }
+    
+    
+    .sidebar-top button img {
+      width: 16px; /* Adjust size as per requirement */
+      height: 16px;
+    }
+}
