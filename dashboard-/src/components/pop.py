@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# OpenAI API Credentials (Stored securely using environment variables)
+# OpenAI API Credentials
 openai.api_key = os.getenv("OPENAI_API_KEY", "EhPy4EaDt6osKIvuJzaa4XfQVoWUzNkho4TWgp4unEBWlMNqVfqOJQQJ99BBAC77bzfXJ3w3AAABACOGbr3H")
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://betaaijob.openai.azure.com/")
 openai.api_type = "azure"
@@ -85,7 +85,7 @@ async def extract_resume_text(resume: UploadFile) -> str:
 async def structure_resume_text(text: str) -> dict:
     try:
         response = await asyncio.to_thread(openai.ChatCompletion.create,
-            deployment_id=deployment_name,  # Required for Azure OpenAI
+            deployment_id=deployment_name,
             messages=[
                 {"role": "system", "content": """
 Objective:
@@ -105,7 +105,7 @@ Career Objective:
 - Aspirations, goals, and career path
 
 Education:
-- Higher Education (Bachelor’s, Master’s, etc.)
+- Higher Education (Bachelor's, Master's, etc.)
   * Degree Name
   * Major/Field of Study
   * Institution Name

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# OpenAI API Credentials
 openai.api_key = os.getenv("OPENAI_API_KEY", "EhPy4EaDt6osKIvuJzaa4XfQVoWUzNkho4TWgp4unEBWlMNqVfqOJQQJ99BBAC77bzfXJ3w3AAABACOGbr3H")
 openai.api_base = os.getenv("OPENAI_API_BASE", "https://betaaijob.openai.azure.com/")
 openai.api_type = "azure"

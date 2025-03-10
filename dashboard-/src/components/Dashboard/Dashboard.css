@@ -10,20 +10,42 @@
 .greet {
     display: flex;
     align-items: center;
-    gap: 20px;
+    justify-content: space-between;
     padding:36px 60px ;
     background-color: #ffffff;
     box-shadow: rgba(0, 0, 0, 0.3);
     margin-bottom: 50px;
 }
+.greet-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
 .greet img {
     width:41px;
     height: 46.59px;
 }
-.greet div {
+.top-create-button {
+
+    margin-right: 40px;
+   
+}
+.top-create-button button {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    justify-content: center;
+    width: 204px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    background: #1F2CBE;
+    color: var(--White, #FFF);
+    text-align: center;
+    font-size: 16.67px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 21px; /* 96.908% */
+    letter-spacing: 0.108px;
+    color: #FFF;
 }
 .greet div h2 {
     font-size: 28.81px;
@@ -34,6 +56,11 @@
     font-size: 14px;
     font-weight: 500;
     color: rgb(28, 36, 110,68%);
+}
+.align {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 .content {
     display: flex;
@@ -147,7 +174,7 @@ fill: #FFF;
 .content img {
     width: 200px;
     margin-bottom: 1rem;
-    animation: float 3s ease-in-out infinite;
+    /*animation: float 3s ease-in-out infinite;*/
 }
 .interviewAI-content img {
     width: 200px;
@@ -545,9 +572,10 @@ line-height: 52.662px; /* 251.728% */
     padding-bottom: 4px;
     padding-right: 44px;
     display: flex;
-    align-items: center;
+
     flex-direction: column;
     gap: 12px;
+    justify-content: flex-start;
 }
 
 
@@ -1416,11 +1444,21 @@ font-weight: 600;
 line-height: 16.602px; /* 171.429% */
 letter-spacing: 0.048px;
 }
-.card-bottom .ready-download {
-    border-radius: 11px;
-background: #121746;
+.card-bottom .ready-download:disabled {
+  background-color: #9ea3b8;
+  cursor: not-allowed;
 }
 
+.card-bottom .ready-download {
+  border-radius: 11px;
+  background: #121746;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.card-bottom .ready-download:hover:not(:disabled) {
+  background-color: #0a0d2a;
+}
 
 @media (max-width:750px) {
     .home-page {
@@ -1720,6 +1758,96 @@ letter-spacing: 0.098px;
         line-height: 20.139px; 
         letter-spacing: 0.059px;
         }
+}
+
+/* Loading Animation Styles */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.loading-container {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 400px;
+}
+
+.loading-container h3 {
+  margin: 15px 0;
+  color: #333;
+  font-size: 22px;
+}
+
+.loading-container p {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  border: 5px solid rgba(0, 123, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+.loading-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.resume-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .resume-dashboard-container {
+    padding: 10px;
+  }
 }
 
 

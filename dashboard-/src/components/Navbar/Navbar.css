@@ -56,6 +56,30 @@
     display: none;
 }
 
+/* Login button styles */
+.login-container {
+    display: flex;
+    align-items: center;
+}
+
+.login-button {
+    background-color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 4px;
+    color: #1B29CB;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: transparent;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
 @media (max-width:750px) {
     .menu {
         display: block;
@@ -67,5 +91,10 @@
     }
     .nav {
         padding: 0px 20px;
+    }
+    
+    .login-button {
+        font-size: 12px;
+        padding: 6px 12px;
     }
 }

@@ -1,0 +1,1341 @@
+.resume-manager {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  min-height: 300px;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.error-message {
+  color: #e74c3c;
+  margin-bottom: 15px;
+}
+
+.retry-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #2980b9;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  text-align: center;
+  color: #7f8c8d;
+}
+
+.empty-state h3 {
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+/* PDF Grid */
+.pdf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* PDF Card */
+.pdf-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* PDF Preview */
+.pdf-preview {
+  height: 200px;
+  background-color: #f1f1f1;
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.pdf-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: #ecf0f1;
+}
+
+.pdf-placeholder span {
+  font-size: 24px;
+  font-weight: bold;
+  color: #7f8c8d;
+}
+
+/* PDF Info */
+.pdf-info {
+  padding: 15px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.pdf-title {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdf-date {
+  margin: 0;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+/* PDF Actions */
+.pdf-actions {
+  display: flex;
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+.view-button,
+.download-button {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  margin: 0 5px;
+}
+
+.view-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.view-button:hover {
+  background-color: #2980b9;
+}
+
+.download-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  margin: 0 8px;
+}
+
+.download-button:hover:not(.disabled):not(.loading) {
+  background-color: #45a049;
+}
+
+.download-button.disabled {
+  background-color: #95a5a6;
+  cursor: pointer;
+  opacity: 0.9;
+  position: relative;
+  overflow: hidden;
+}
+
+.download-button.disabled:hover {
+  background-color: #7f8c8d;
+}
+
+.download-button.disabled::before {
+  content: '🔒';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+}
+
+.download-button.loading {
+  background-color: #45a049;
+  cursor: wait;
+  position: relative;
+}
+
+.download-button.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pdf-error {
+  color: #e74c3c;
+  font-size: 12px;
+  margin: 5px 0 0 0;
+}
+
+.upload-pdf-button {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 4px;
+  border: none;
+  background-color: #f39c12;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin: 0 5px;
+}
+
+.upload-pdf-button:hover {
+  background-color: #d35400;
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 15px;
+  background-color: #f8f9fa;
+}
+
+.upload-actions {
+  display: flex;
+  width: 100%;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.upload-button {
+  flex: 1;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-button:hover {
+  background-color: #2980b9;
+}
+
+.upload-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  flex: 1;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #c0392b;
+}
+
+.upload-info {
+  width: 100%;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 14px;
+  padding: 10px;
+}
+
+.pdf-placeholder p {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-top: 10px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .resume-manager {
+    padding: 15px;
+  }
+  
+  .pdf-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.delete-button {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+  margin-left: 8px;
+}
+
+.delete-button:hover {
+  background-color: #d32f2f;
+}
+
+/* Create Resume Button */
+.create-resume-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.create-resume-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-resume-button:hover {
+  background-color: #2980b9;
+}
+
+/* Create Resume Popup */
+.create-resume-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.create-resume-popup {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-popup-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #777;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-popup-button:hover {
+  color: #333;
+}
+
+.popup-content {
+  padding: 20px;
+}
+
+.popup-content h4 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #555;
+  text-align: center;
+}
+
+.resume-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.resume-option {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  width: 45%;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.resume-option:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.resume-option.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resume-option.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.option-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.resume-option h5 {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.resume-option p {
+  margin: 0;
+  font-size: 14px;
+  color: #777;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .resume-options {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .resume-option {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+.coming-soon-message {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  color: #856404;
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Floating Action Button Menu */
+.fab-menu {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+}
+
+.fab-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #3498db;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-button:hover {
+  transform: scale(1.1);
+  background-color: #2980b9;
+}
+
+.fab-button svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+.fab-menu-items {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-menu.active .fab-menu-items {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.fab-menu-item:hover {
+  transform: translateX(-5px);
+  background-color: #f8f9fa;
+}
+
+.fab-menu-item span {
+  white-space: nowrap;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Enhanced Resume Card Animations */
+.pdf-card {
+  animation: cardAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center;
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pdf-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced Create Resume Button */
+.create-resume-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.create-resume-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  transition: transform 0.6s;
+}
+
+.create-resume-button:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Enhanced Popup Animation */
+.create-resume-overlay {
+  animation: overlayAppear 0.3s ease-out;
+}
+
+.create-resume-popup {
+  animation: popupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes overlayAppear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popupSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Resume Option Cards Enhanced Animation */
+.resume-option {
+  position: relative;
+  overflow: hidden;
+}
+
+.resume-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.resume-option:hover::before {
+  transform: translateX(100%);
+}
+
+/* Loading Animation Enhancement */
+.loading-spinner {
+  position: relative;
+}
+
+.loading-spinner::before,
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid transparent;
+  border-top-color: #3498db;
+  border-radius: 50%;
+  animation: spinnerRing 2s linear infinite;
+}
+
+.loading-spinner::after {
+  border-top-color: transparent;
+  border-right-color: #3498db;
+  animation-duration: 1.5s;
+}
+
+@keyframes spinnerRing {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Grid Layout Animation */
+.pdf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  animation: gridAppear 0.5s ease-out;
+}
+
+@keyframes gridAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Empty State Enhancement */
+.empty-state {
+  position: relative;
+  overflow: hidden;
+}
+
+.empty-state::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent, rgba(52, 152, 219, 0.05), transparent);
+  animation: emptyStateGlow 2s infinite;
+}
+
+@keyframes emptyStateGlow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Resume Controls */
+.resume-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar {
+  flex: 1;
+  max-width: 300px;
+  position: relative;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.search-bar input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  outline: none;
+}
+
+.view-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.view-button {
+  padding: 8px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-button.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.sort-controls select {
+  padding: 8px 30px 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+}
+
+/* Bulk Actions Bar */
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bulk-actions span {
+  color: #666;
+  font-size: 14px;
+}
+
+.bulk-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bulk-actions button:hover {
+  background-color: #c0392b;
+}
+
+/* List View */
+.pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.pdf-list .pdf-card {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s;
+}
+
+.pdf-list .pdf-preview {
+  width: 100px;
+  height: 140px;
+  margin-right: 20px;
+}
+
+.pdf-list .pdf-info {
+  flex: 1;
+  padding: 0;
+  border: none;
+}
+
+.pdf-list .pdf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 15px;
+}
+
+/* Selected State */
+.pdf-card.selected {
+  border: 2px solid #3498db;
+  position: relative;
+}
+
+.pdf-card.selected::before {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  animation: checkmark 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes checkmark {
+  from {
+    transform: scale(0) rotate(-45deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .resume-controls {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .search-bar {
+    max-width: 100%;
+  }
+
+  .pdf-list .pdf-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .pdf-list .pdf-preview {
+    margin: 0 0 15px 0;
+  }
+
+  .pdf-list .pdf-actions {
+    flex-direction: row;
+    justify-content: center;
+    padding: 15px 0 0 0;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+/* Loading States */
+.pdf-card.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.pdf-card .loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+/* Button Loading States */
+.delete-button.loading,
+.upload-pdf-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.delete-button.loading::after,
+.upload-pdf-button.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: button-spinner 0.8s linear infinite;
+}
+
+@keyframes button-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Disabled States */
+.view-button.disabled,
+.download-button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Error Boundary Styles */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  margin: 1rem;
+}
+
+.error-boundary h3 {
+  color: #856404;
+  margin-bottom: 1rem;
+}
+
+.error-boundary p {
+  color: #856404;
+  margin-bottom: 1.5rem;
+}
+
+.error-boundary .retry-button {
+  background-color: #ffc107;
+  color: #856404;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.error-boundary .retry-button:hover {
+  background-color: #ffb300;
+}
+
+.error-boundary .error-details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #e74c3c;
+  text-align: left;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.auth-error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.auth-error-message::before {
+  content: '⚠️';
+  font-size: 16px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Authentication loading state */
+.download-button.auth-loading {
+  background-color: #3498db;
+  cursor: wait;
+}
+
+.download-button.auth-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* Authentication Popup Styles */
+.auth-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100;
+  backdrop-filter: blur(3px);
+  animation: overlayAppear 0.3s ease-out;
+}
+
+.auth-popup {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: popupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.auth-message {
+  text-align: center;
+  color: #666;
+  margin: 20px 0;
+  font-size: 16px;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.login-button,
+.signup-button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.login-button:hover {
+  background-color: #2980b9;
+}
+
+.signup-button {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.signup-button:hover {
+  background-color: #27ae60;
+}
+
+/* Disabled FAB Menu Items */
+.fab-menu-item.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #f1f1f1;
+}
+
+.fab-menu-item.disabled:hover {
+  transform: none;
+  background-color: #f1f1f1;
+}
+
+.fab-menu-item.disabled span {
+  color: #666;
+}
+
+/* Add tooltip for disabled state */
+.fab-button[title] {
+  position: relative;
+}
+
+.fab-button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  margin-bottom: 10px;
+  z-index: 1000;
+}
+
+/* Download Authentication Popup Styles */
+.auth-popup-overlay.download {
+  z-index: 1200; /* Higher than regular auth popup */
+}
+
+.auth-popup.download {
+  max-width: 450px;
+}
+
+.auth-popup.download .auth-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.auth-popup.download .auth-message::before {
+  content: '📥';
+  font-size: 24px;
+}
+
+.auth-popup .auth-buttons {
+  margin: 25px 0;
+}
+
+.auth-popup .auth-buttons button {
+  min-width: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-popup .auth-buttons button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  transition: transform 0.4s;
+}
+
+.auth-popup .auth-buttons button:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Download Button Authentication States */
+.download-button.auth-required {
+  background-color: #95a5a6;
+  position: relative;
+  overflow: hidden;
+}
+
+.download-button.auth-required::before {
+  content: '🔒';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  animation: lockBounce 1s ease infinite;
+}
+
+@keyframes lockBounce {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+}
+
+.download-button.auth-required:hover {
+  background-color: #7f8c8d;
+}
+
+/* Enhanced Authentication Error Message */
+.auth-error-message.download {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 12px 20px;
+  margin: 15px 0;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-error-message.download::before {
+  content: '⚠️';
+  font-size: 18px;
+} 
