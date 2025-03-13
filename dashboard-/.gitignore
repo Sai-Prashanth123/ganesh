@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -22,12 +20,39 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Python
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo 
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+
+# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Large binary files
+*.pyd
+*.dll
+*.so
+*.dylib
+
+# Environment variables
 .env
-.venv
-env/
-venv/
-ENV/
+.env.*
+
+# Logs
+*.log
+
+# System files
+Thumbs.db 

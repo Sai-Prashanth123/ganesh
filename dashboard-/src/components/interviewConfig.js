@@ -1,4 +1,20 @@
-// Default configuration values for Azure OpenAI
-export const DEFAULT_ENDPOINT = "https://ganes-m6rqikx3-eastus2.cognitiveservices.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview-2";
-export const DEFAULT_API_KEY = "6aTFnZk0Vb7efrHwAQDbrH3Zz2GYVIh40oWwEs780aDOa7bplt7eJQQJ99BBACHYHv6XJ3w3AAAAACOGx0YV";
-export const DEFAULT_DEPLOYMENT = "gpt-4o-realtime-preview-2"; 
+// Interview AI Configuration
+export const DEFAULT_ENDPOINT = process.env.REACT_APP_INTERVIEW_ENDPOINT || 'https://api.openai.com/v1/chat/completions';
+export const DEFAULT_API_KEY = process.env.REACT_APP_INTERVIEW_API_KEY || '';
+export const DEFAULT_DEPLOYMENT = process.env.REACT_APP_INTERVIEW_DEPLOYMENT || 'gpt-4';
+
+// Interview settings
+export const INTERVIEW_DURATION = 30; // Duration in seconds
+export const MAX_QUESTIONS = 5;
+export const DIFFICULTY_LEVELS = ['Easy', 'Medium', 'Hard'];
+
+// Technical interview domains
+export const INTERVIEW_DOMAINS = [
+  'Web Development',
+  'Data Science',
+  'Machine Learning',
+  'DevOps',
+  'Cloud Computing',
+  'Mobile Development',
+  'Cybersecurity'
+]; 
