@@ -519,8 +519,8 @@ const Interview = () => {
       {showTimeUpPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
-            <Link to='/interviewAi_updated'><img className='pop-cancel'  src={cancel_img}/></Link>
-            <img className='pop-logo' src={logo}/>
+            <Link to='/interviewAi_updated'><img className='pop-cancel' src={cancel_img} alt="Close popup"/></Link>
+            <img className='pop-logo' src={logo} alt="Job Spring Logo"/>
             
            
             <p>Thank you Prasanth .<br/>You have completed the interview</p>

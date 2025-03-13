@@ -19,7 +19,7 @@ const Navbar = ({ setIsShow }) => {
   return (
     <nav className='nav'>
       <img onClick={() => setIsShow(prev => !prev)} className='menu' src={menu_img} alt="Menu" />
-      <a className='title' href='#'>
+      <a className='title' href='/'>
         <img src={logo} alt="Job Spring Logo" />
         <h2>Job Spring</h2>
       </a>

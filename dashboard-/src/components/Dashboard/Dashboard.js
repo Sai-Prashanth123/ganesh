@@ -1173,6 +1173,9 @@ const openMoreDetails = async () => {
   const handleInterviewSubmit = async (event) => {
       event.preventDefault();
       const formData = new FormData(event.target);
+      
+      // Create request data object from form data
+      const requestData = Object.fromEntries(formData.entries());
 
       try {
           console.log("Submitting interview request with data:", requestData);
@@ -1431,7 +1434,7 @@ const openMoreDetails = async () => {
             <div className='Process-card ready'>
               <div className='card-top'>
                 <div>
-                  <img src={card1_img} />
+                  <img src={card1_img} alt="Resume card icon"/>
                   <h3>{resumeData.title.length > 12 ? resumeData.title.slice(0,12) + '..' : resumeData.title}</h3>
                   <button className='ready-btn'>
                     <h6>Ready</h6>
@@ -1442,7 +1445,7 @@ const openMoreDetails = async () => {
                 </div>
               </div>
               <div className='card-bottom'>
-                <img src={share_img}/>
+                <img src={share_img} alt="Share icon"/>
                 <button 
                   className='ready-download' 
                   onClick={handleDownload}
@@ -1455,7 +1458,7 @@ const openMoreDetails = async () => {
             <div className='Process-card'>
               <div className='card-top'>
                 <div>
-                  <img src={card1_img} />
+                  <img src={card1_img} alt="Resume card icon"/>
                   <h3>No Resume</h3>
                   <button>
                     <p></p>
@@ -1467,7 +1470,7 @@ const openMoreDetails = async () => {
                 </div>
               </div>
               <div className='card-bottom'>
-                <img src={share_img}/>
+                <img src={share_img} alt="Share icon"/>
                 <button onClick={openCard1}>Create</button>
               </div>
             </div>
@@ -1489,7 +1492,7 @@ const openMoreDetails = async () => {
           <div className='Process-card ready'>
             <div className='card-top'>
               <div>
-              <img src={props.topImage} />
+              <img src={props.topImage} alt="Profile thumbnail"/>
               <h3>UX Designer</h3>
               <h6>jan 12,2025</h6>
               </div>
@@ -1498,7 +1501,7 @@ const openMoreDetails = async () => {
               </div>
             </div>
             <div className='card-bottom'>
-              <img src={share_img}/>
+              <img src={share_img} alt="Share icon"/>
               <button className='ready-download'>Download</button>
             </div>
           </div>
@@ -1513,9 +1516,9 @@ const openMoreDetails = async () => {
 {/* InterView Updated AI */}
 {props.interviewAIUpdatedShow && 
   <div className='interviewAI-content'>
-  <img src={interview_illustration}/>
-  <p>Start your journey with AI-driven interviews <br/> and feedback to boost your confidence.</p>
-  <button /*onClick={openinterviewAiOptions}*/><a>Comming soon</a></button>
+  <img src={interview_illustration} alt="Interview Illustration"/>
+  <p>Start your journey with AI-driven interviews <br/> and boost your confidence.</p>
+  <button /*onClick={openinterviewAiOptions}*/><a href="/interview">Coming soon</a></button>
 </div>
 
 }
@@ -1524,18 +1527,18 @@ const openMoreDetails = async () => {
 <div className='interview-options' style={intervieOptionsStyle}>
         <div className='header'>
           <h3>Practice with interview ai</h3>
-          <img onClick={closeInterviewAIOptions} src={cancel_img}/>
+          <img onClick={closeInterviewAIOptions} src={cancel_img} alt="Close button"/>
         </div>
         <div className='cardContent'>
           <h3>How do you want to get started?</h3>
           <div className='twoOptions'>
             <div className='option' onClick={openCard1}>
-              <img src={generalInterview_img}/>
+              <img src={generalInterview_img} alt="General interview icon"/>
               <h3>General interview</h3>
               <p>Practice interviews for hands-on experience.</p>
             </div>
             <div className='option' onClick={openSpecificDetails}>
-              <img src={specificInterview_img}/>
+              <img src={specificInterview_img} alt="Specific interview icon"/>
               <h3>Interview for specific companies</h3>
               <p>Practice for specific companies using details</p>
             </div>
@@ -1548,7 +1551,7 @@ const openMoreDetails = async () => {
       <div className='specificInterview' style={specificDetailsStyle}>
         <div className='specDetails-header'>
           <h5>Interview Details</h5>
-          <img onClick={closeInterviewAIDetails} src={cancel_img}/>
+          <img onClick={closeInterviewAIDetails} src={cancel_img} alt="Close button"/>
         </div>
         <form className='specDetailsForm'>
           <div>

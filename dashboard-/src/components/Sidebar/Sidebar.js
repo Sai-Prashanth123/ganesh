@@ -32,7 +32,7 @@ const Sidebar = (props) => {
     <div className='sidebar' style={{left:props.isShow?'0px':'-270px'}} >
       <div className='sidebar-top'>
       <div className='logo-name'>
-        <a><img src={logo} alt="Job Spring Logo" />Job Spring</a>
+        <a href="/"><img src={logo} alt="Job Spring Logo" />Job Spring</a>
       </div>
       <Link to="/" > <button 
           onClick={() => handleButtonClick('resume')}
