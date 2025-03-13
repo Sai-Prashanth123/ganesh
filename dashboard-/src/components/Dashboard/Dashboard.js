@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import ResumeManager from './ResumeManager';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthRequired from '../Auth/AuthRequired';
+import { API_BASE_URL } from '../../config';
 
 const Dashboard = (props) => {
   console.log("Props received:", props);
@@ -160,7 +161,7 @@ const Dashboard = (props) => {
           // Send to backend for optimization using the correct endpoint
           console.log("Sending resume to backend for optimization...");
           
-          const response = await fetch("http://localhost:8000/process-all/", {
+          const response = await fetch(`${API_BASE_URL}/process-all/`, {
               method: "POST",
               body: formData,
               signal: AbortSignal.timeout(60000) // 60-second timeout for processing
@@ -300,7 +301,7 @@ const Dashboard = (props) => {
                   console.log("No optimized PDF filename found, but resumeId exists. Using direct download with ID.");
                   
                   // Use direct download with resumeId
-                  const downloadUrl = `http://localhost:8000/direct-download/${resumeId}?user_id=${userId}`;
+                  const downloadUrl = `${API_BASE_URL}/direct-download/${resumeId}?user_id=${userId}`;
                   console.log("Using direct download endpoint with ID:", downloadUrl);
                   
                   // Create temporary link element for direct download
@@ -330,11 +331,11 @@ const Dashboard = (props) => {
                   let downloadUrl;
                   if (resumeId && userId) {
                       // Use our direct download endpoint with resume ID
-                      downloadUrl = `http://localhost:8000/direct-download/${resumeId}?user_id=${userId}`;
+                      downloadUrl = `${API_BASE_URL}/direct-download/${resumeId}?user_id=${userId}`;
                       console.log("Using direct download endpoint:", downloadUrl);
                   } else {
                       // Fallback to the test-blob-access endpoint which can proxy the request
-                      downloadUrl = `http://localhost:8000/test-blob-access?blob_url=https://pdf1.blob.core.windows.net/new/${optimizedPdfFilename}&download=true`;
+                      downloadUrl = `${API_BASE_URL}/test-blob-access?blob_url=https://pdf1.blob.core.windows.net/new/${optimizedPdfFilename}&download=true`;
                       console.log("Using blob access proxy endpoint:", downloadUrl);
                   }
 
@@ -434,6 +435,7 @@ const Dashboard = (props) => {
       }
       
       if (resumeData && resumeData.title) {
+        isSetButton(true);
           // Get the sanitized job title for the filename
           const sanitizedJobTitle = resumeData.title.replace(/\s+/g, '_').toLowerCase();
           
@@ -481,7 +483,7 @@ const Dashboard = (props) => {
               console.log("Using resumeId to download from API directly");
               
               // Use direct download with resumeId - this should work even without optimizedPdfFilename
-              const downloadUrl = `http://localhost:8000/direct-download/${resumeId}?user_id=${userId}`;
+              const downloadUrl = `${API_BASE_URL}/direct-download/${resumeId}?user_id=${userId}`;
               console.log("Using direct download endpoint with ID:", downloadUrl);
               
               try {
@@ -510,7 +512,7 @@ const Dashboard = (props) => {
           if (optimizedPdfFilename && !resumeId) {
               console.log("Using optimizedPdfFilename without resumeId");
               
-              const downloadUrl = `http://localhost:8000/test-blob-access?blob_url=https://pdf1.blob.core.windows.net/new/${optimizedPdfFilename}&download=true`;
+              const downloadUrl = `${API_BASE_URL}/test-blob-access?blob_url=https://pdf1.blob.core.windows.net/new/${optimizedPdfFilename}&download=true`;
               console.log("Using blob access proxy endpoint:", downloadUrl);
               
               try {
@@ -1173,9 +1175,14 @@ const openMoreDetails = async () => {
       const formData = new FormData(event.target);
 
       try {
-          const response = await fetch("http://127.0.0.1:8000/submit-interview/", {
+          console.log("Submitting interview request with data:", requestData);
+          
+          const response = await fetch(`${API_BASE_URL}/submit-interview/`, {
               method: "POST",
-              body: formData
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify(requestData)
           });
 
           const result = await response.json();
@@ -1203,7 +1210,7 @@ const openMoreDetails = async () => {
     }
   }, [location]);
 
-  const [isButton,isSetButton] = useState(false)
+  const [isButton,isSetButton] = useState(false);
 
   // Add a useEffect to try to extract the PDF filename from resumeData if available
   useEffect(() => {
@@ -1255,7 +1262,7 @@ const openMoreDetails = async () => {
         </div>
         </div>
         {isButton ? <div className='top-create-button'>
-        <button onClick={openCard1}>+ Create resume</button>
+        <button onClick={()=> navigate('/')}>+ Create resume</button>
         </div> : null}
         
       </div>

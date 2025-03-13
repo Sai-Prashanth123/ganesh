@@ -6,12 +6,15 @@ import exit_img from './interview-imgs/exit_img.png'
 import cancel_img from './interview-imgs/cancel_img.png'
 import interview_vid from './interview-imgs/intervie01.mp4'
 import { LowLevelRTClient } from 'rt-client';
-import { Link } from 'react-router-dom'
-
-// Default configuration values for Azure OpenAI
-const DEFAULT_ENDPOINT = "https://ganes-m6rqikx3-eastus2.cognitiveservices.azure.com/openai/realtime?api-version=2024-10-01-preview&deployment=gpt-4o-realtime-preview-2";
-const DEFAULT_API_KEY = "6aTFnZk0Vb7efrHwAQDbrH3Zz2GYVIh40oWwEs780aDOa7bplt7eJQQJ99BBACHYHv6XJ3w3AAAAACOGx0YV";
-const DEFAULT_DEPLOYMENT = "gpt-4o-realtime-preview-2";
+import { Link, useLocation } from 'react-router-dom'
+import { auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { API_BASE_URL } from '../config';
+import { 
+  DEFAULT_ENDPOINT, 
+  DEFAULT_API_KEY, 
+  DEFAULT_DEPLOYMENT 
+} from './interviewConfig';
 
 const Interview = () => {
   const [metrics, setMetrics] = useState({
@@ -32,6 +35,7 @@ const Interview = () => {
   const audioPlayerRef = useRef(null);
   const timerRef = useRef(null);
   const [showTimeUpPopup, setShowTimeUpPopup] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
     // Function to fetch metrics
@@ -100,7 +104,7 @@ const Interview = () => {
   const startRealtime = async () => {
     try {
         // Fetch interview instructions from backend
-        const response = await fetch("http://localhost:8000/api/get-interview-details");
+        const response = await fetch(`${API_BASE_URL}/api/get-interview-details`);
         if (!response.ok) {
             throw new Error("Failed to fetch interview details");
         }
@@ -399,7 +403,7 @@ const Interview = () => {
   };
 
   return (
-    <div>
+    <div className="interview-container">
       <div className='interview'>
         <div className='interview-header'>
           <div className='interview-title'>
@@ -465,7 +469,7 @@ const Interview = () => {
                 ) : (
                   <img 
                     key={videoError ? 'retry' : 'video'}
-                    src="http://localhost:8000/video-feed" 
+                    src={`${API_BASE_URL}/video-feed`} 
                     alt="User video feed" 
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={handleVideoError}
@@ -524,6 +528,15 @@ const Interview = () => {
             <Link to='/interviewAi_updated'><button onClick={handleClosePopup}>Download</button></Link>
             
           </div>
+        </div>
+      )}
+      {showVideo && (
+        <div className="video-container">
+          <img 
+            src={`${API_BASE_URL}/video-feed`} 
+            alt="Video feed" 
+            className="video-feed"
+          />
         </div>
       )}
     </div>

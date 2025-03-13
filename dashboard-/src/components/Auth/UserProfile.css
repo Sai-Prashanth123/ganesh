@@ -85,3 +85,14 @@
   font-size: 12px;
   border-bottom: 1px solid #ecf0f1;
 } 
+
+@media (max-width: 768px) {
+  .user-email {
+    display: none;
+  }
+  .user-avatar {
+    width: 42px;
+    height: 42px;
+  }
+}
+  

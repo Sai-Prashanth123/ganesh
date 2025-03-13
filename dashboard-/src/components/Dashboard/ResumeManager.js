@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthRequired from '../Auth/AuthRequired';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config';
 import './ResumeManager.css';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -49,74 +50,19 @@ const ResumeManager = () => {
   const fetchResumes = async () => {
     if (!currentUser) return;
     
-    setLoading(true);
-    setError(null);
-    setPdfErrors({});
-    
     try {
-      console.log(`Fetching resumes for user: ${currentUser.uid}`);
-      const response = await fetch(`http://localhost:8000/get-resumes/${currentUser.uid}`);
-
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/get-resumes/${currentUser.uid}`);
+      
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Server error: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Error fetching resumes: ${response.statusText}`);
+        throw new Error(`Error fetching resumes: ${response.status}`);
       }
       
-      const responseText = await response.text();
-      console.log("Raw API response:", responseText);
-      
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error("Error parsing JSON:", parseError);
-        throw new Error("Invalid response format from server");
-      }
-      
-      console.log("Parsed data:", data);
-      
-      if (!Array.isArray(data)) {
-        if (data && Array.isArray(data.resumes)) {
-          data = data.resumes;
-          console.log("Using data.resumes array:", data);
-        } else {
-          console.error("Response is not an array and does not contain a resumes array:", data);
-          throw new Error("Invalid response format from server");
-        }
-      }
-      
-      const specificFilename = "resume_20250303_005650_e0b9c48d.pdf";
-      const filteredData = data.filter(resume => resume.filename !== specificFilename);
-      
-      if (filteredData.length < data.length) {
-        console.log(`Filtered out specific resume: ${specificFilename}`);
-      }
-      
-      const processedData = filteredData.map(resume => {
-        console.log("Processing resume:", resume);
-        
-        // Ensure direct_download_url is present
-        if (!resume.direct_download_url && resume.id && resume.user_id) {
-          console.log("Creating direct_download_url for resume:", resume.id);
-          resume.direct_download_url = `/direct-download/${resume.id}?user_id=${resume.user_id}`;
-        }
-        
-        return {
-          ...resume,
-          hasValidBlob: isValidBlobUrl(resume.blob_url),
-          blob_url: ensureSasToken(resume.blob_url),
-          direct_download_url: resume.direct_download_url ? 
-            ensureSasToken(resume.direct_download_url) : 
-            `/direct-download/${resume.id}?user_id=${resume.user_id}`
-        };
-      });
-      
-      console.log("Processed resumes:", processedData);
-      setResumes(processedData);
-    } catch (error) {
-      console.error("Error fetching resumes:", error);
-      setError("Failed to load resumes. Please try again. Error: " + error.message);
+      const data = await response.json();
+      setResumes(data);
+    } catch (err) {
+      console.error("Error fetching resumes:", err);
+      setError('Failed to load resumes. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -176,7 +122,7 @@ const ResumeManager = () => {
     // For direct download URLs (from our API), return as is
     if (url.startsWith('/')) {
       console.log("Using direct download URL:", url);
-      return `http://localhost:8000${url}`;
+      return `${API_BASE_URL}${url}`;
     }
     
     // Check if the URL already has a SAS token
@@ -202,20 +148,21 @@ const ResumeManager = () => {
   };
 
   const handleUpload = async (resumeId) => {
-    if (!currentUser || !selectedFile) return;
-    
-    setActionLoading(prev => ({ ...prev, [resumeId]: 'upload' }));
-    
+    if (!selectedFile) {
+      console.log("No file selected");
+      return;
+    }
+
     try {
-      console.log(`Uploading file for resume ID: ${resumeId}`);
-      
+      setActionLoading(prev => ({ ...prev, [resumeId]: 'upload' }));
       const formData = new FormData();
       formData.append('file', selectedFile);
-      formData.append('user_id', currentUser.uid);
       
-      const response = await fetch(`http://localhost:8000/upload-resume-pdf/${resumeId}`, {
+      console.log(`Uploading file to: ${API_BASE_URL}/upload-resume-pdf/${resumeId}`);
+      
+      const response = await fetch(`${API_BASE_URL}/upload-resume-pdf/${resumeId}`, {
         method: 'POST',
-        body: formData
+        body: formData,
       });
       
       if (!response.ok) {
@@ -255,18 +202,22 @@ const ResumeManager = () => {
 
   // Function to delete a resume
   const deleteResume = async (resumeId) => {
-    if (!currentUser) return;
-    
     if (!window.confirm("Are you sure you want to delete this resume?")) {
       return;
     }
     
-    setActionLoading(prev => ({ ...prev, [resumeId]: 'delete' }));
-    
+    if (!currentUser) {
+      console.log("User not authenticated, showing login popup");
+      setShowAuthPopup(true);
+      // Store the resumeId for later use
+      setUploadingFor(resumeId);
+      return;
+    }
+
     try {
-      console.log(`Deleting resume with ID: ${resumeId}`);
-      const response = await fetch(`http://localhost:8000/delete-resume/${resumeId}?user_id=${currentUser.uid}`, {
-        method: 'DELETE'
+      setActionLoading(prev => ({ ...prev, [resumeId]: 'delete' }));
+      const response = await fetch(`${API_BASE_URL}/delete-resume/${resumeId}?user_id=${currentUser.uid}`, {
+        method: 'DELETE',
       });
       
       if (!response.ok) {
@@ -378,11 +329,11 @@ const ResumeManager = () => {
       // Always prefer direct download URL
       let downloadUrl;
       if (resumeUrl.startsWith('/direct-download/')) {
-        downloadUrl = `http://localhost:8000${resumeUrl}`;
+        downloadUrl = `${API_BASE_URL}${resumeUrl}`;
         console.log("Using API direct download URL:", downloadUrl);
       } else if (resumeId && userId) {
         // Create a direct download URL if we have resumeId and userId
-        downloadUrl = `http://localhost:8000/direct-download/${resumeId}?user_id=${userId}`;
+        downloadUrl = `${API_BASE_URL}/direct-download/${resumeId}?user_id=${userId}`;
         console.log("Created direct download URL from ID:", downloadUrl);
       } else {
         // Fallback to the original URL (should rarely happen)

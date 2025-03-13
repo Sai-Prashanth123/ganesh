@@ -71,11 +71,33 @@ app.add_middleware(
 )
 
 # OpenAI API Credentials from environment variables
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.api_base = os.getenv("OPENAI_API_BASE")
-openai.api_type = os.getenv("OPENAI_API_TYPE")
-openai.api_version = os.getenv("OPENAI_API_VERSION")
-deployment_name = os.getenv("OPENAI_DEPLOYMENT_NAME")
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_base = os.getenv("OPENAI_API_BASE")
+openai_api_type = os.getenv("OPENAI_API_TYPE", "azure")
+openai_api_version = os.getenv("OPENAI_API_VERSION", "2023-05-15")
+deployment_name = os.getenv("OPENAI_DEPLOYMENT_NAME", "gpt-4o")
+
+# Initialize OpenAI client with better configuration
+if openai_api_key and openai_api_base:
+    try:
+        openai_client = openai.AzureOpenAI(
+            api_key=openai_api_key,
+            api_version=openai_api_version,
+            azure_endpoint=openai_api_base
+        )
+        logger.info("Successfully initialized OpenAI client")
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenAI client: {str(e)}")
+        openai_client = None
+else:
+    logger.warning("OpenAI credentials missing. Some functionality will be limited.")
+    openai_client = None
+
+# For backwards compatibility
+openai.api_key = openai_api_key
+openai.api_base = openai_api_base
+openai.api_type = openai_api_type
+openai.api_version = openai_api_version
 
 # Azure Cosmos DB Credentials from environment variables
 HOST = os.getenv("COSMOS_HOST")
@@ -99,12 +121,12 @@ BLOB_CONNECTION_STRING_WITH_SAS = os.getenv("BLOB_CONNECTION_STRING_WITH_SAS")
 ADMIN_KEY = os.getenv("ADMIN_KEY", "resume_admin_key_2025")
 
 # Check if key environment variables are present
-if not all([openai.api_key, openai.api_base, HOST, MASTER_KEY, BLOB_CONNECTION_STRING, BLOB_SAS_TOKEN]):
+if not all([openai_api_key, openai_api_base, HOST, MASTER_KEY, BLOB_CONNECTION_STRING, BLOB_SAS_TOKEN]):
     logger.warning("Missing critical environment variables. Please check your .env file.")
 
 # Initialize Cosmos Client
 try:
-    client = CosmosClient(HOST, MASTER_KEY)
+    cosmos_client = CosmosClient(HOST, MASTER_KEY)
     logger.info("Successfully connected to Cosmos DB")
 except Exception as e:
     logger.error(f"Failed to connect to Cosmos DB: {str(e)}")
@@ -615,134 +637,137 @@ class ResumePDFGenerator:
     def process_resume(self, resume_data: Dict[str, Any]):
         """Enhanced resume processing with dynamic section handling"""
         try:
-            # Make sure we have Error style available
-            error_style = self.styles.get('Error', self.styles['Normal'])
-            header_style = self.styles.get('HeaderName', self.styles['Heading1'])
-            
-            # Validate that resume_data is a dictionary
+            # Ensure resume_data is a dictionary
             if not isinstance(resume_data, dict):
-                self.logger.error(f"resume_data is not a dictionary: {type(resume_data)}")
-                # Try to convert string to dictionary if possible
                 if isinstance(resume_data, str):
                     try:
                         resume_data = json.loads(resume_data)
-                        self.logger.info("Successfully converted string resume_data to dictionary")
                     except json.JSONDecodeError:
-                        self.logger.error("Failed to parse string resume_data as JSON")
-                        resume_data = {"name": "Error Processing Resume", "summary": "Invalid resume data format"}
+                        self.logger.error(f"Failed to parse resume_data as JSON: {resume_data[:100]}...")
+                        resume_data = {"name": "Error Processing Resume"}
                 else:
-                    self.logger.error(f"Cannot process resume_data of type: {type(resume_data)}")
-                    resume_data = {"name": "Error Processing Resume", "summary": "Invalid resume data format"}
+                    self.logger.error(f"resume_data is not a dictionary or valid JSON string: {type(resume_data)}")
+                    resume_data = {"name": "Error Processing Resume"}
             
-            # Create header with validated data
+            # Extract data if nested
+            if isinstance(resume_data, dict) and 'data' in resume_data and isinstance(resume_data['data'], dict):
+                resume_data = resume_data['data']
+            
+            # If there's personal_info, ensure key fields are copied to main resume_data
+            if 'personal_info' in resume_data and isinstance(resume_data['personal_info'], dict):
+                for key, value in resume_data['personal_info'].items():
+                    if key.lower() not in resume_data:
+                        resume_data[key.lower()] = value
+            
+            # Define metadata fields that should be skipped in the output
+            skip_fields = {
+                'type', 'resume_type', 'resumetype', 'original_resume_id', 'originalresumeid',
+                'user_id', 'userid', 'id', '_id', 'resume_id', 'resumeid',
+                'blob_url', 'bloburl', 'download_url', 'downloadurl',
+                'created_at', 'createdat', 'timestamp', 'time_stamp'
+            }
+            
+            # Process header information
             self.create_header_section(resume_data)
             
-            # Process sections in the order we want them to appear
-            section_order = ['summary', 'skills', 'experience', 'education', 'projects', 'certifications', 'publications']
+            # Add a horizontal line after the header
+            self.main_content.append(HRFlowable(
+                width="100%",
+                thickness=1,
+                color=self.colors['subtext'],
+                spaceBefore=0,
+                spaceAfter=10
+            ))
             
-            for section in section_order:
-                if section in resume_data and resume_data[section]:
-                    try:
-                        # For education specifically, add extra validation
-                        if section == 'education':
-                            education_data = resume_data[section]
-                            # If education is a string, convert it to a proper structure
-                            if isinstance(education_data, str):
-                                self.logger.warning(f"Education section is a string, converting to proper structure: {education_data[:100]}")
-                                education_data = [{
-                                    "institution": "From Resume Text",
-                                    "degree": "Education Information",
-                                    "details": [education_data[:500] + ("..." if len(education_data) > 500 else "")]
-                                }]
-                                # Update the resume_data with the proper structure
-                                resume_data[section] = education_data
-                            # If education is not a list, wrap it in a list
-                            elif not isinstance(education_data, list):
-                                self.logger.warning(f"Education section is not a list, wrapping: {type(education_data)}")
-                                # If it's a dict, it might be a single education entry
-                                if isinstance(education_data, dict):
-                                    resume_data[section] = [education_data]
-                                else:
-                                    # Otherwise create a dummy entry
-                                    resume_data[section] = [{
-                                        "institution": "Invalid Format",
-                                        "degree": "Could not parse education data",
-                                        "details": [f"Original type: {type(education_data)}"]
-                                    }]
-                        
-                        section_title = re.sub(r'([a-z])([A-Z])', r'\1 \2', section)
-                        section_title = section_title.replace('_', ' ').title()
-                        
-                        self.main_content.append(Paragraph(section_title, self.styles['SectionHeader']))
-                        self.main_content.append(self.add_section_divider())
-                        
-                        # Process section content
-                        section_elements = self.process_section(section, resume_data[section])
-                        self.main_content.extend(section_elements)
-                    except Exception as section_e:
-                        self.logger.error(f"Error processing section {section}: {str(section_e)}")
-                        # Add an error message instead
-                        self.main_content.append(Paragraph(f"Error processing {section_title}", error_style))
+            # Process sections in a specific order
+            section_order = [
+                ('summary', 'Summary'),
+                ('skills', 'Skills'),
+                ('experience', 'Work Experience'),
+                ('education', 'Education'),
+                ('projects', 'Projects'),
+                ('certifications', 'Certifications'),
+                ('publications', 'Publications'),
+                ('languages', 'Languages'),
+                ('interests', 'Interests')
+            ]
             
-            # Process any remaining sections not in our predefined order
-            skip_fields = {'name', 'email', 'phone', 'linkedin', 'github', 'website', 'location', 'summary'}
-            skip_fields.update(section_order)
+            # Process sections
+            for section_key, section_title in section_order:
+                if section_key in resume_data and resume_data[section_key]:
+                    self.main_content.append(self.add_section_header(section_title))
+                    section_data = resume_data[section_key]
+                    
+                    # If section handler exists, use it
+                    if section_key in self.section_handlers:
+                        self.main_content.extend(self.process_section(section_key, section_data))
+                    else:
+                        # Otherwise use generic handling
+                        self.main_content.extend(self.add_section(section_title, section_data))
+                    
+                    # Add a horizontal line after each section
+                    self.main_content.append(HRFlowable(
+                        width="100%",
+                        thickness=1,
+                        color=self.colors['subtext'],
+                        spaceBefore=5,
+                        spaceAfter=10
+                    ))
             
+            # Process any additional sections that are not in the predefined order
             for key, value in resume_data.items():
-                if key not in skip_fields and value is not None:
-                    try:
-                        section_title = re.sub(r'([a-z])([A-Z])', r'\1 \2', key)
-                        section_title = section_title.replace('_', ' ').title()
-                        
-                        self.main_content.append(Paragraph(section_title, self.styles['SectionHeader']))
-                        self.main_content.append(self.add_section_divider())
-                        
-                        # Process section content
-                        section_elements = self.process_section(key, value)
-                        self.main_content.extend(section_elements)
-                    except Exception as other_e:
-                        self.logger.error(f"Error processing other section {key}: {str(other_e)}")
-                        # Add an error message instead
-                        self.main_content.append(Paragraph(f"Error processing {section_title}", error_style))
+                if (key not in [s[0] for s in section_order] and 
+                    key.lower() not in skip_fields and 
+                    key not in ['personal_info', 'name', 'email', 'phone', 'linkedin', 'github', 'website'] and
+                    value and not key.startswith('_')):
+                    
+                    # Format the section title nicely
+                    section_title = key.replace('_', ' ').title()
+                    
+                    self.main_content.append(self.add_section_header(section_title))
+                    self.main_content.extend(self.add_section(section_title, value))
+                    
+                    # Add a horizontal line after each section
+                    self.main_content.append(HRFlowable(
+                        width="100%",
+                        thickness=1,
+                        color=self.colors['subtext'],
+                        spaceBefore=5,
+                        spaceAfter=10
+                    ))
+        
         except Exception as e:
-            # Global error handling if something went wrong in the overall process
             self.logger.error(f"Error processing resume data: {str(e)}")
-            # Add error message to the document
-            self.main_content.append(Paragraph("Error Processing Resume", header_style))
-            self.main_content.append(Paragraph(f"An error occurred while processing this resume: {str(e)}", self.styles['Normal']))
-            # Don't re-raise the exception to allow PDF generation to continue
+            raise
 
-    def format_contact_info(self, resume_data: Dict[str, str]) -> str:
-        """Format contact information in a centered layout"""
-        try:
-            # Ensure resume_data is a dictionary
-            if not isinstance(resume_data, dict):
-                self.logger.error(f"resume_data in format_contact_info is not a dictionary: {type(resume_data)}")
-                return "Contact information not available"
-            
-            contact_parts = []
-            
-            # Email and phone on one line
-            if 'email' in resume_data and resume_data['email']:
-                contact_parts.append(f"✉️ {resume_data['email']}")
-            if 'phone' in resume_data and resume_data['phone']:
-                contact_parts.append(f"📞 {resume_data['phone']}")
-                
-            # GitHub and LinkedIn on next line
-            social_parts = []
-            if 'github' in resume_data and resume_data['github']:
-                social_parts.append(f"🔗 {resume_data['github']}")
-            if 'linkedin' in resume_data and resume_data['linkedin']:
-                social_parts.append(f"🔗 {resume_data['linkedin']}")
-                
-            contact_text = f"<div align='center'>{' | '.join(contact_parts)}</div>" if contact_parts else ""
-            if social_parts:
-                contact_text += f"<div align='center'>{' | '.join(social_parts)}</div>"
-                
-            return contact_text
-        except Exception as e:
-            self.logger.error(f"Error formatting contact info: {str(e)}")
-            return "Contact information not available"
+    def format_contact_info(self, contact_info: Dict[str, str]) -> str:
+        """Format contact information with icons"""
+        if not isinstance(contact_info, dict):
+            return ""
+        
+        info_parts = []
+        icons = {
+            'email': '✉️',
+            'phone': '📞',
+            'linkedin': '🔗',
+            'github': '🔗',
+            'website': '🌐'
+        }
+
+        for key, value in contact_info.items():
+            if value and isinstance(value, (str, int, float)):
+                value_str = str(value).strip()
+                if value_str:
+                    clean_key = re.sub(r'[^\w\s]', '', str(key))
+                    icon = icons.get(clean_key.lower(), '')
+                    if key.lower() == 'github':
+                        info_parts.append(f"{icon} {value_str}")
+                    elif key.lower() == 'linkedin':
+                        info_parts.append(f"{icon} {value_str}")
+                    else:
+                        info_parts.append(f"{icon} {value_str}")
+
+        return " | ".join(info_parts)
 
     def add_section_divider(self):
         """Add a section divider"""
@@ -806,55 +831,86 @@ class ResumePDFGenerator:
     def create_header_section(self, resume_data: Dict[str, Any]):
         """Create the header section with name and contact info"""
         try:
-            # Make sure HeaderName style is available
-            header_style = self.styles.get('HeaderName', self.styles['Heading1'])
-            
-            # Ensure resume_data is a dictionary
+            # Validate resume_data is a dictionary
             if not isinstance(resume_data, dict):
-                self.logger.error(f"resume_data is not a dictionary: {type(resume_data)}")
-                if isinstance(resume_data, str):
-                    try:
-                        resume_data = json.loads(resume_data)
-                    except json.JSONDecodeError:
-                        resume_data = {"name": "Error Processing Resume"}
-                else:
-                    resume_data = {"name": "Error Processing Resume"}
-            
-            # Add name centered and bold
-            if isinstance(resume_data, dict) and 'name' in resume_data and resume_data['name']:
+                self.logger.error(f"Invalid resume data type in header section: {type(resume_data)}")
+                # Add a minimal header
+                self.header_elements.append(Paragraph("Resume", self.styles['HeaderName']))
+                return
+
+            # Extract name - check both top level and personal_info
+            name = None
+            if 'name' in resume_data and resume_data['name']:
+                name = resume_data['name']
+            elif 'personal_info' in resume_data and isinstance(resume_data['personal_info'], dict):
+                for name_key in ['name', 'Name', 'full_name', 'fullName']:
+                    if name_key in resume_data['personal_info'] and resume_data['personal_info'][name_key]:
+                        name = resume_data['personal_info'][name_key]
+                        break
+
+            # Add default if no name found
+            if not name:
+                name = "Resume"
+
                 self.header_elements.append(Paragraph(
-                    f"<div align='center'>{resume_data['name']}</div>", 
-                    header_style
-                ))
-            else:
-                # Add a default name if missing
+                name, 
+                self.styles['HeaderName']
+            ))
+
+            # Add title/job title if available
+            title = None
+            if 'title' in resume_data and resume_data['title']:
+                title = resume_data['title']
+            elif 'job_title' in resume_data and resume_data['job_title']:
+                title = resume_data['job_title']
+            elif 'personal_info' in resume_data and isinstance(resume_data['personal_info'], dict):
+                for title_key in ['title', 'job_title', 'position']:
+                    if title_key in resume_data['personal_info'] and resume_data['personal_info'][title_key]:
+                        title = resume_data['personal_info'][title_key]
+                        break
+
+            if title:
                 self.header_elements.append(Paragraph(
-                    "<div align='center'>Resume</div>", 
-                    header_style
+                    f"<para alignment='center'>{title}</para>", 
+                    self.styles['Contact']
                 ))
+
+            # Extract contact information
+            contact_info = {}
+            contact_fields = ['email', 'phone', 'linkedin', 'github', 'website']
             
-            # Add contact info - safely check resume_data is a dict first
-            if isinstance(resume_data, dict):
-                contact_fields = {'email', 'phone', 'linkedin', 'github', 'website'}
-                contact_info = {
-                    field: resume_data.get(field)
-                    for field in contact_fields
-                    if field in resume_data and resume_data[field]
-                }
-                
+            # Check personal_info first for contact details
+            if 'personal_info' in resume_data and isinstance(resume_data['personal_info'], dict):
+                for field in contact_fields:
+                    # Check for case variations
+                    for key in resume_data['personal_info'].keys():
+                        if key.lower() == field.lower() and resume_data['personal_info'][key]:
+                            contact_info[field] = resume_data['personal_info'][key]
+                            break
+            
+            # Also check top level fields
+            for field in contact_fields:
+                for key in resume_data.keys():
+                    if key.lower() == field.lower() and resume_data[key]:
+                        contact_info[field] = resume_data[key]
+                        break
+            
+            # Format and add contact information
                 if contact_info:
-                    contact_text = self.format_contact_info(resume_data)
-                    contact_style = self.styles.get('Contact', self.styles['Normal'])
-                    self.header_elements.append(Paragraph(contact_text, contact_style))
-                    self.header_elements.append(Spacer(1, 5))
+                contact_text = self.format_contact_info(contact_info)
+                if contact_text:
+            self.header_elements.append(Paragraph(
+                        f"<para alignment='center'>{contact_text}</para>", 
+                        self.styles['Contact']
+                    ))
+            
+            # Add spacing after header
+            self.header_elements.append(Spacer(1, 10))
+            
         except Exception as e:
             self.logger.error(f"Error creating header section: {str(e)}")
-            # Add a minimal header if there's an error
-            header_style = self.styles.get('HeaderName', self.styles['Heading1'])
-            self.header_elements.append(Paragraph(
-                "<div align='center'>Resume</div>", 
-                header_style
-            ))
+            # Add minimal header in case of error
+            self.header_elements.append(Paragraph("Resume", self.styles['HeaderName']))
 
     def generate_pdf(self):
         """Generate the final PDF"""
@@ -928,12 +984,12 @@ class ResumePDFGenerator:
 # Database and container management functions
 def get_or_create_database(database_id: str):
     try:
-        database = client.get_database_client(database_id)
+        database = cosmos_client.get_database_client(database_id)
         logger.info(f"Successfully connected to database: {database_id}")
         return database
     except exceptions.CosmosResourceNotFoundError:
         logger.info(f"Creating new database: {database_id}")
-        return client.create_database(database_id)
+        return cosmos_client.create_database(database_id)
     except Exception as e:
         logger.error(f"Database error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -975,10 +1031,15 @@ def store_json(container, doc_id: str, data: dict, max_retries=3):
 
 # GPT API functions
 async def resume_to_json(resume_text: str) -> dict:
-    """Convert resume text to JSON using OpenAI GPT"""
+    """Convert resume text to structured JSON using OpenAI"""
+    if not openai_client:
+        logger.error("OpenAI client not initialized. Unable to process resume.")
+        return {"summary": "Error processing resume content: OpenAI service not available"}
+        
     try:
-        response = await openai.ChatCompletion.acreate(
-            engine=deployment_name,
+        # Use the new OpenAI client API
+        response = openai_client.chat.completions.create(
+            model=deployment_name,
             messages=[
                 {"role": "system", "content": "You are a resume parser that converts resume text to structured JSON. Always ensure your output is valid JSON format."},
                 {"role": "user", "content": f"Convert this resume text to JSON format with sections for personal info, summary, experience, education, and skills. Return ONLY valid JSON without explanation or formatting:\n\n{resume_text}"}
@@ -1004,7 +1065,10 @@ async def resume_to_json(resume_text: str) -> dict:
         json_string = json_string.strip()
         
         try:
-            return json.loads(json_string)
+            parsed_data = json.loads(json_string)
+            # Add type field to identify this as a resume
+            parsed_data["type"] = "resume"
+            return parsed_data
         except json.JSONDecodeError as json_err:
             logger.error(f"JSON decode error: {str(json_err)} in string: {json_string[:100]}...")
             
@@ -1017,83 +1081,137 @@ async def resume_to_json(resume_text: str) -> dict:
             fixed_json = re.sub(r',\s*}', '}', fixed_json)
             
             try:
-                return json.loads(fixed_json)
+                parsed_data = json.loads(fixed_json)
+                # Add type field
+                parsed_data["type"] = "resume"
+                return parsed_data
             except json.JSONDecodeError:
-                # If still failing, try a more robust approach with a JSON repair library if available
-                # For now, fall back to a minimal structure
-                logger.error(f"Failed to repair JSON. Original error: {str(json_err)}")
-                return {
-                    "error": "Could not parse resume data",
-                    "personal_info": {"name": "Unknown"},
-                    "summary": "Failed to parse resume content properly."
-                }
+                # If all attempts to fix JSON fail, return a basic structure
+                logger.error("Failed to parse JSON even after fixes")
+                return {"summary": "Error processing resume content: JSON parsing failed", "type": "resume"}
             
     except Exception as e:
         logger.error(f"Error in resume_to_json: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to convert resume to JSON format")
+        return {"summary": f"Error processing resume content: {str(e)}", "type": "resume"}
 
 async def analyze_job_details(title: str, description: str) -> dict:
-    """Analyze job details using OpenAI GPT"""
+    """Analyze job details with OpenAI to extract key requirements and skills"""
+    if not openai_client:
+        logger.error("OpenAI client not initialized. Unable to analyze job details.")
+        return {"summary": "Error processing job details: OpenAI service not available"}
+        
     try:
-        response = await openai.ChatCompletion.acreate(
-            engine=deployment_name,
+        # Use the new OpenAI client API
+        response = openai_client.chat.completions.create(
+            model=deployment_name,
             messages=[
-                {"role": "system", "content": "You are a job analysis expert. Always respond with valid JSON containing requirements, responsibilities, and qualifications."},
-                {"role": "user", "content": f"Convert this job posting into JSON format:\n\nTitle: {title}\n\nDescription: {description}"}
+                {"role": "system", "content": "You are a job analysis assistant. Extract key requirements and skills from job descriptions."},
+                {"role": "user", "content": f"Analyze this job: Title: {title}\n\nDescription: {description}\n\nExtract key requirements, skills, and responsibilities as JSON."}
             ],
             temperature=0.3,
             max_tokens=1000
         )
         
-        content = response.choices[0].message.content.strip()
-        # Clean up the response to ensure it's valid JSON
-        if content.startswith("```json"):
-            content = content[7:-3]  # Remove ```json and ``` markers
-        elif content.startswith("{"):
-            content = content  # Already JSON format
-        else:
-            raise ValueError("Response is not in valid JSON format")
+        json_string = response.choices[0].message.content
+        # Clean up and process the response
+        json_string = json_string.strip()
+        
+        # Remove markdown formatting
+        if json_string.startswith("```json"):
+            json_string = json_string[7:]
+        elif json_string.startswith("```"):
+            json_string = json_string[3:]
             
-        return json.loads(content)
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON response: {content}")
-        raise HTTPException(status_code=500, detail="Failed to parse job details response")
+        if json_string.endswith("```"):
+            json_string = json_string[:-3]
+            
+        json_string = json_string.strip()
+        
+        # Parse the JSON
+        try:
+            job_data = json.loads(json_string)
+            # Add some metadata
+            job_data["title"] = title
+            job_data["type"] = "job"
+            return job_data
+        except json.JSONDecodeError:
+            logger.error("Failed to parse job analysis JSON")
+            return {
+                "title": title,
+                "type": "job",
+                "summary": "Error processing job description",
+                "skills": [],
+                "requirements": []
+            }
+            
     except Exception as e:
         logger.error(f"Error in analyze_job_details: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to analyze job details")
+        return {
+            "title": title,
+            "type": "job",
+            "summary": f"Error analyzing job details: {str(e)}",
+            "skills": [],
+            "requirements": []
+        }
 
 async def generate_tailored_resume(resume_data: dict, job_data: dict) -> dict:
-    """Generate tailored resume using OpenAI GPT"""
+    """Generate a tailored resume for a specific job using OpenAI"""
+    if not openai_client:
+        logger.error("OpenAI client not initialized. Unable to generate tailored resume.")
+        return {"summary": "Error generating tailored resume: OpenAI service not available"}
+        
     try:
-        response = await openai.ChatCompletion.acreate(
-            engine=deployment_name,
+        # Prepare the input for the AI
+        resume_json = json.dumps(resume_data)
+        job_json = json.dumps(job_data)
+        
+        # Use the new OpenAI client API
+        response = openai_client.chat.completions.create(
+            model=deployment_name,
             messages=[
-                {"role": "system", "content": "You are an expert at tailoring resumes to specific job requirements. Always respond with valid JSON. Generate a well-structured resume in JSON format with the following sections: name, email, phone, github, linkedin, skills, experience, education, and projects. Formatting Requirements: Personal Information: Include name, email, phone, github, and linkedin. Skills Section: Should contain categorized skills as key-value pairs, such as Languages and Technologies & Tools. Experience Section: Should be a list of objects with company, location, title, date, and responsibilities. Each role should include a bulleted list of responsibilities and mention relevant technologies used. Education Section: Should include institution, degree, major, date, gpa, and coursework. Coursework should be listed as a comma-separated string. Projects Section: Each project should include name, description, and technologies. The description should be concise but informative. Technologies should be stored as a list of strings. Ensure the JSON output follows this structure exactly without any extra formatting or missing fields This keeps everything compact while retaining all essential details."},  
-                {"role": "user", "content": f"Tailor this resume to the job requirements and return a valid JSON object:\n\nResume: {json.dumps(resume_data)}\n\nJob Details: {json.dumps(job_data)}"}
+                {"role": "system", "content": "You are a resume tailoring assistant. Create tailored resumes that highlight relevant experience and skills for specific jobs."},
+                {"role": "user", "content": f"Tailor this resume:\n\nRESUME: {resume_json}\n\nFOR THIS JOB: {job_json}\n\nReturn a tailored resume as JSON that highlights the most relevant experience and skills for this job."}
             ],
-            temperature=0.3,
+            temperature=0.4,
             max_tokens=2000
         )
         
-        content = response.choices[0].message.content.strip()
-        # Clean up the response to ensure it's valid JSON
-        if content.startswith("```json"):
-            content = content[7:-3]  # Remove ```json and ``` markers
-        elif not content.startswith("{"):
-            raise ValueError("Response is not in valid JSON format")
+        json_string = response.choices[0].message.content
+        # Clean up and process the response
+        json_string = json_string.strip()
+        
+        # Remove markdown formatting
+        if json_string.startswith("```json"):
+            json_string = json_string[7:]
+        elif json_string.startswith("```"):
+            json_string = json_string[3:]
             
+        if json_string.endswith("```"):
+            json_string = json_string[:-3]
+            
+        json_string = json_string.strip()
+        
+        # Parse the JSON
         try:
-            return json.loads(content)
+            tailored_data = json.loads(json_string)
+            # Add some metadata
+            tailored_data["type"] = "tailored_resume"
+            tailored_data["original_resume_id"] = resume_data.get("id", "unknown")
+            tailored_data["job_title"] = job_data.get("title", "unknown")
+            return tailored_data
         except json.JSONDecodeError:
-            logger.error(f"Invalid JSON response: {content}")
-            raise ValueError("Response could not be parsed as JSON")
+            logger.error("Failed to parse tailored resume JSON")
+            return {
+                "type": "tailored_resume",
+                "summary": "Error generating tailored resume: JSON parsing failed"
+            }
             
-    except ValueError as e:
-        logger.error(f"Value error in generate_tailored_resume: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         logger.error(f"Error in generate_tailored_resume: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate tailored resume")
+        return {
+            "type": "tailored_resume",
+            "summary": f"Error generating tailored resume: {str(e)}"
+        }
 
 # PDF Generation classes (DynamicSection, ExperienceSection, SkillsSection, ResumePDFGenerator)
 # ... (Keep these classes as they were in the original script)
@@ -1213,12 +1331,17 @@ def extract_text_from_docx(contents: bytes) -> str:
 # Helper functions for the modified endpoints
 async def process_resume_with_openai(resume_text: str) -> dict:
     """Process resume text with OpenAI to extract structured data."""
+    if not openai_client:
+        logger.error("OpenAI client not initialized. Unable to process resume.")
+        return {"summary": "Error processing resume content: OpenAI service not available"}
+
     try:
-        response = await openai.ChatCompletion.acreate(
-            engine=deployment_name,
+        # Use the new OpenAI client API
+        response = openai_client.chat.completions.create(
+            model=deployment_name,
             messages=[
-                {"role": "system", "content": "You are a resume parser that converts resume text to structured JSON."},
-                {"role": "user", "content": f"Convert this resume text to JSON format with sections for personal info, summary, experience, education, and skills:\n\n{resume_text}"}
+                {"role": "system", "content": "You are a resume parser that converts resume text to structured JSON. Always ensure your output is valid JSON format."},
+                {"role": "user", "content": f"Convert this resume text to JSON format with sections for personal info, summary, experience, education, and skills. Return ONLY valid JSON without explanation or formatting:\n\n{resume_text}"}
             ],
             temperature=0.3,
             max_tokens=2000
@@ -1227,30 +1350,42 @@ async def process_resume_with_openai(resume_text: str) -> dict:
         json_string = response.choices[0].message.content
         # Clean up the response to ensure it's valid JSON
         json_string = json_string.strip()
+        
+        # Remove any markdown code block indicators
         if json_string.startswith("```json"):
-            json_string = json_string[7:-3]  # Remove ```json and ``` markers
+            json_string = json_string[7:]
+        elif json_string.startswith("```"):
+            json_string = json_string[3:]
+            
+        if json_string.endswith("```"):
+            json_string = json_string[:-3]
+            
+        # Further cleanup to handle common JSON formatting issues
+        json_string = json_string.strip()
         
         try:
-            resume_data = json.loads(json_string)
-            # Add type field to identify this as a resume
-            resume_data["type"] = "resume"
-            return resume_data
+            return json.loads(json_string)
+        except json.JSONDecodeError as json_err:
+            logger.error(f"JSON decode error: {str(json_err)} in string: {json_string[:100]}...")
+            
+            # Attempt to fix common JSON errors
+            # 1. Replace single quotes with double quotes
+            fixed_json = json_string.replace("'", "\"")
+            # 2. Ensure property names are quoted
+            fixed_json = re.sub(r'([{,])\s*(\w+):', r'\1"\2":', fixed_json)
+            # 3. Fix trailing commas
+            fixed_json = re.sub(r',\s*}', '}', fixed_json)
+            
+            try:
+                return json.loads(fixed_json)
         except json.JSONDecodeError:
-            logger.error(f"Invalid JSON response: {json_string}")
-            # Return a basic structure if parsing fails
-            return {
-                "type": "resume",
-                "filename": "Parsed Resume",
-                "summary": "Failed to parse resume content properly."
-            }
+                # If all attempts to fix JSON fail, return a basic structure
+                logger.error("Failed to parse JSON even after fixes")
+                return {"summary": "Error processing resume content: JSON parsing failed"}
+                
     except Exception as e:
-        logger.error(f"Error in process_resume_with_openai: {str(e)}")
-        # Return a basic structure if processing fails
-        return {
-            "type": "resume",
-            "filename": "Parsed Resume",
-            "summary": "Failed to process resume content."
-        }
+        logger.error(f"Error in resume_to_json: {str(e)}")
+        return {"summary": f"Error processing resume content: {str(e)}"}
 
 def save_resume_to_cosmos(resume_data: dict) -> str:
     """Save resume data to Cosmos DB."""
@@ -1262,7 +1397,7 @@ def save_resume_to_cosmos(resume_data: dict) -> str:
         resume_data["id"] = resume_id
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Save the resume
@@ -1395,7 +1530,7 @@ def update_resume_with_blob_url(resume_id, blob_url):
     """Update resume in Cosmos DB with blob URL."""
     try:
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Get the resume
@@ -1677,7 +1812,7 @@ async def get_resumes(user_id: str):
         logger.info(f"Fetching resumes for user_id: {user_id}")
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for resumes with the specified user_id
@@ -1810,7 +1945,7 @@ async def get_resume(resume_id: str, user_id: str):
         logger.info(f"Fetching resume with ID: {resume_id} for user: {user_id}")
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for the resume with the specified ID and user_id
@@ -1922,7 +2057,7 @@ async def download_resume(resume_id: str, user_id: str = Query(..., description=
         logger.info(f"Download resume request for resume ID: {resume_id}, user ID: {user_id}")
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for the resume with the specified ID and user_id
@@ -2040,7 +2175,7 @@ async def delete_resume(resume_id: str, user_id: str):
         logger.info(f"Deleting resume with ID: {resume_id} for user: {user_id}")
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for the resume with the specified ID and user_id
@@ -2113,7 +2248,7 @@ async def replace_resume_file(
     """
     try:
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for the resume with the specified ID and user_id
@@ -2319,7 +2454,7 @@ async def fix_blob_urls(admin_key: str = Query(..., description="Admin key for s
     
     try:
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for all resumes with blob_url
@@ -2559,7 +2694,7 @@ async def direct_download(resume_id: str, user_id: str = Query(..., description=
         logger.info(f"Direct download request for resume ID: {resume_id}, user ID: {user_id}")
         
         # Get database and container
-        database = client.get_database_client(RESUME_DATABASE_ID)
+        database = cosmos_client.get_database_client(RESUME_DATABASE_ID)
         container = database.get_container_client(RESUME_CONTAINER_ID)
         
         # Query for the resume with the specified ID and user_id

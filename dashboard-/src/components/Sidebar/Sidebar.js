@@ -34,55 +34,55 @@ const Sidebar = (props) => {
       <div className='logo-name'>
         <a><img src={logo} alt="Job Spring Logo" />Job Spring</a>
       </div>
-        <button 
+      <Link to="/" > <button 
           onClick={() => handleButtonClick('resume')}
           className={activeButton === 'resume' ? 'active' : ''}
         >
-          <Link to="/" >
+          
             <img src={resume_img} className='resumeImg' alt="resume" style={getImageStyle('resume')} />
             Resume Builder
-          </Link>
-        </button>
+          
+        </button></Link>
 
-        <button 
+        <Link to="/interviewAi"><button 
           onClick={() => handleButtonClick('interviewAi')} 
           className={activeButton === 'interviewAi' ? 'active' : ''}
         >
-          <Link to="/interviewAi">
+          
             <img src={interview_ai_img} alt="interview ai" style={getImageStyle('interviewAi')} />
             Interview AI
-          </Link>
-        </button>
+         
+        </button> </Link>
 
-        <button 
+        <Link to="/autoApply"><button 
           onClick={() => handleButtonClick('autoApply')} 
           className={activeButton === 'autoApply' ? 'active' : ''}
         >
-          <Link to="/autoApply">
+          
             <img src={auto_apply_img} alt="auto apply" style={getImageStyle('autoApply')} />
             Auto Apply
-          </Link>
-        </button>
+          
+        </button></Link>
 
-        <button 
+        <Link to="/jobTracking"><button 
           onClick={() => handleButtonClick('jobTracking')} 
           className={activeButton === 'jobTracking' ? 'active' : ''}
         >
-          <Link to="/jobTracking">
+          
             <img src={job_tracking_img} alt="job tracking" style={getImageStyle('jobTracking')} />
             Job Tracking
-          </Link>
-        </button>
+          
+        </button></Link>
 
-        <button 
+        <Link to="/networking"><button 
           onClick={() => handleButtonClick('networking')} 
           className={activeButton === 'networking' ? 'active' : ''}
         >
-          <Link to="/networking">
+          
             <img src={networking_img} alt="networking" style={getImageStyle('networking')} />
             Networking
-          </Link>
-        </button>
+          
+        </button></Link>
       </div>
 
       <div className='sidebar-bottom'>

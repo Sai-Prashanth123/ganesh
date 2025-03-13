@@ -22,7 +22,7 @@
    display: none;
 }
 .sidebar-top button {
-   width: 98%;
+   width: 180px;
    text-align: left;
    padding: 12px 0px 12px 15px;
    font-size: 17px;
@@ -30,12 +30,9 @@
    outline: none;
    border-radius: 11px;
    justify-content: flex-start;
-  
+   font-size: 13.31px;
    cursor: pointer;
    transition: 0.3s;
-}
-
-.sidebar-top button a {
    display: flex;
    align-items:center;
    justify-content:flex-start;
@@ -43,7 +40,16 @@
    list-style: none;
    text-decoration: none;
    color:rgba(0, 20, 61, 60%) ;
-   font-size: 13.31px;
+}
+
+.sidebar-top  a {
+   display: flex;
+   align-items:center;
+   justify-content:flex-start;
+   gap: 18px;
+   list-style: none;
+   text-decoration: none;
+   color: #000;   
    font-weight: 500;
 }
 .sidebar-top button:hover a {

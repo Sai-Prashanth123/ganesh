@@ -24,6 +24,7 @@
 .greet img {
     width:41px;
     height: 46.59px;
+    margin-right: 10px;
 }
 .top-create-button {
 
@@ -88,6 +89,20 @@
         padding-top: 18px;
         padding-left: 24px;
         height: 84px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 75px;
+    }
+    .top-create-button {
+        margin-right: 0px;
+    }
+    .top-create-button button {
+    width: 150px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 7px;
+    font-size: 12.67px;
     }
     .greet img {
         width: 29.435px;
@@ -508,7 +523,21 @@ line-height: 16.082px; /* 86.979% */
             background: #FFF;
             box-shadow: 3.88px 3.88px 17.46px 0px rgba(0, 0, 0, 0.08);
         }
+        .disabledstate {
+            gap: 11.64px;
+            padding: 30px;
+            border-radius:17.06px ;
+            cursor: pointer;
+            width: 210.485px;
+            height: 208.545px;
+            border-radius: 13.58px;
+            box-shadow: 3.88px 3.88px 17.46px 0px rgba(0, 0, 0, 0.08);
+        }
         .option img {
+            width: 56.259px;
+            height: 56.259px;
+        }
+        .disabledstate img {
             width: 56.259px;
             height: 56.259px;
         }
@@ -516,7 +545,14 @@ line-height: 16.082px; /* 86.979% */
             font-size: 14.72px;
             font-weight: 600;
         }
+        .disabledstate h3 {
+            font-size: 14.72px;
+            font-weight: 600;
+        }
         .option p {
+            font-size: 11.64px;
+        }
+        .disabledstate p {
             font-size: 11.64px;
         }
 }

@@ -1,7 +1,0 @@
-opencv-python
-mediapipe
-numpy
-fastapi
-uvicorn
-python-multipart
-python-dotenv

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { API_BASE_URL } from '../../config';
 import './ResumeStats.css';
 
 const ResumeStats = () => {
@@ -8,71 +9,74 @@ const ResumeStats = () => {
     totalResumes: 0,
     fileTypes: {},
     uploadsByMonth: {},
-    latestUpload: null
+    latestUpload: null,
+    recentActivity: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (currentUser) {
-      fetchResumeStats();
-    }
-  }, [currentUser]);
-
-  const fetchResumeStats = async () => {
-    if (!currentUser) return;
-    
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await fetch(`http://localhost:8000/get-resumes/${currentUser.uid}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch resumes');
+    const fetchStats = async () => {
+      if (!currentUser) {
+        setLoading(false);
+        return;
       }
-      
-      const data = await response.json();
-      const resumes = data.resumes || [];
-      
-      // Calculate statistics
-      const fileTypes = {};
-      const uploadsByMonth = {};
-      let latestUpload = null;
-      
-      resumes.forEach(resume => {
-        // Count file types
-        if (resume.filename) {
-          const extension = resume.filename.split('.').pop().toLowerCase();
-          fileTypes[extension] = (fileTypes[extension] || 0) + 1;
+
+      try {
+        setLoading(true);
+        
+        // Fetch resume data to calculate stats
+        const response = await fetch(`${API_BASE_URL}/get-resumes/${currentUser.uid}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch resume data');
         }
         
-        // Count uploads by month
-        if (resume.created_at) {
-          const date = new Date(resume.created_at);
-          const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
-          uploadsByMonth[monthYear] = (uploadsByMonth[monthYear] || 0) + 1;
-          
-          // Track latest upload
-          if (!latestUpload || new Date(resume.created_at) > new Date(latestUpload.created_at)) {
-            latestUpload = resume;
+        const resumes = await response.json();
+        const resumesData = resumes.resumes || [];
+        
+        // Calculate statistics
+        const fileTypes = {};
+        const uploadsByMonth = {};
+        let latestUpload = null;
+        
+        resumesData.forEach(resume => {
+          // Count file types
+          if (resume.filename) {
+            const extension = resume.filename.split('.').pop().toLowerCase();
+            fileTypes[extension] = (fileTypes[extension] || 0) + 1;
           }
-        }
-      });
-      
-      setStats({
-        totalResumes: resumes.length,
-        fileTypes,
-        uploadsByMonth,
-        latestUpload
-      });
-    } catch (error) {
-      setError('Error fetching resume statistics: ' + error.message);
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+          
+          // Count uploads by month
+          if (resume.created_at) {
+            const date = new Date(resume.created_at);
+            const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+            uploadsByMonth[monthYear] = (uploadsByMonth[monthYear] || 0) + 1;
+            
+            // Track latest upload
+            if (!latestUpload || new Date(resume.created_at) > new Date(latestUpload.created_at)) {
+              latestUpload = resume;
+            }
+          }
+        });
+        
+        setStats({
+          totalResumes: resumesData.length,
+          fileTypes,
+          uploadsByMonth,
+          latestUpload,
+          recentActivity: resumesData
+        });
+      } catch (error) {
+        setError('Error fetching resume statistics: ' + error.message);
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [currentUser]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date';
